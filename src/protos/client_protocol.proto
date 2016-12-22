@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+service PartServer {
+  rpc read (ReadRequest) returns (ReadResponse) {}
+}
+
+message ReadRequest {
+  bytes key = 1;
+}
+
+message ReadResponse {
+  int64 value = 1;
+  bool is_value = 2;
+  bool error = 3;
+  string error_message = 4;
+}
