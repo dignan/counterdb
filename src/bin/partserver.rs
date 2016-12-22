@@ -15,7 +15,11 @@ use counterdb::client_protocol_grpc::PartServerServer;
 use counterdb::client_protocol::ReadRequest;
 use counterdb::client_protocol::ReadResponse;
 
+use counterdb::client_protocol::SetRequest;
+use counterdb::client_protocol::SetResponse;
+
 use counterdb::read;
+use counterdb::set;
 use counterdb::get_db_options;
 
 struct PartServerImpl {
@@ -37,6 +41,21 @@ impl PartServer for PartServerImpl {
                 }
             },
             Err(e) => panic!("we should probably handle this better ;)")
+        }
+    }
+
+    fn set(&self, req: SetRequest) -> GrpcResult<SetResponse> {
+        let mut response = SetResponse::new();
+
+        match set(&(self.db), req.get_key(), req.get_value()) {
+            Ok(()) => {
+                Ok(response)
+            },
+            Err(e) => {
+                response.set_is_error(true);
+                response.set_error_message(String::from("surely i'll come back to this"));
+                Ok(response)
+            }
         }
     }
 }

@@ -22,10 +22,14 @@
 
 pub trait PartServer {
     fn read(&self, p: super::client_protocol::ReadRequest) -> ::grpc::result::GrpcResult<super::client_protocol::ReadResponse>;
+
+    fn set(&self, p: super::client_protocol::SetRequest) -> ::grpc::result::GrpcResult<super::client_protocol::SetResponse>;
 }
 
 pub trait PartServerAsync {
     fn read(&self, p: super::client_protocol::ReadRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::client_protocol::ReadResponse>;
+
+    fn set(&self, p: super::client_protocol::SetRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::client_protocol::SetResponse>;
 }
 
 // sync client
@@ -48,6 +52,10 @@ impl PartServer for PartServerClient {
     fn read(&self, p: super::client_protocol::ReadRequest) -> ::grpc::result::GrpcResult<super::client_protocol::ReadResponse> {
         ::futures::Future::wait(self.async_client.read(p))
     }
+
+    fn set(&self, p: super::client_protocol::SetRequest) -> ::grpc::result::GrpcResult<super::client_protocol::SetResponse> {
+        ::futures::Future::wait(self.async_client.set(p))
+    }
 }
 
 // async client
@@ -55,6 +63,7 @@ impl PartServer for PartServerClient {
 pub struct PartServerAsyncClient {
     grpc_client: ::grpc::client::GrpcClient,
     method_read: ::std::sync::Arc<::grpc::method::MethodDescriptor<super::client_protocol::ReadRequest, super::client_protocol::ReadResponse>>,
+    method_set: ::std::sync::Arc<::grpc::method::MethodDescriptor<super::client_protocol::SetRequest, super::client_protocol::SetResponse>>,
 }
 
 impl PartServerAsyncClient {
@@ -68,6 +77,12 @@ impl PartServerAsyncClient {
                     req_marshaller: Box::new(::grpc::grpc_protobuf::MarshallerProtobuf),
                     resp_marshaller: Box::new(::grpc::grpc_protobuf::MarshallerProtobuf),
                 }),
+                method_set: ::std::sync::Arc::new(::grpc::method::MethodDescriptor {
+                    name: "/PartServer/set".to_string(),
+                    streaming: ::grpc::method::GrpcStreaming::Unary,
+                    req_marshaller: Box::new(::grpc::grpc_protobuf::MarshallerProtobuf),
+                    resp_marshaller: Box::new(::grpc::grpc_protobuf::MarshallerProtobuf),
+                }),
             }
         })
     }
@@ -76,6 +91,10 @@ impl PartServerAsyncClient {
 impl PartServerAsync for PartServerAsyncClient {
     fn read(&self, p: super::client_protocol::ReadRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::client_protocol::ReadResponse> {
         self.grpc_client.call_unary(p, self.method_read.clone())
+    }
+
+    fn set(&self, p: super::client_protocol::SetRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::client_protocol::SetResponse> {
+        self.grpc_client.call_unary(p, self.method_set.clone())
     }
 }
 
@@ -95,6 +114,13 @@ impl PartServerAsync for PartServerServerHandlerToAsync {
         let h = self.handler.clone();
         ::grpc::rt::sync_to_async_unary(&self.cpupool, p, move |p| {
             h.read(p)
+        })
+    }
+
+    fn set(&self, p: super::client_protocol::SetRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::client_protocol::SetResponse> {
+        let h = self.handler.clone();
+        ::grpc::rt::sync_to_async_unary(&self.cpupool, p, move |p| {
+            h.set(p)
         })
     }
 }
@@ -132,6 +158,18 @@ impl PartServerAsyncServer {
                     {
                         let handler_copy = handler_arc.clone();
                         ::grpc::server::MethodHandlerUnary::new(move |p| handler_copy.read(p))
+                    },
+                ),
+                ::grpc::server::ServerMethod::new(
+                    ::std::sync::Arc::new(::grpc::method::MethodDescriptor {
+                        name: "/PartServer/set".to_string(),
+                        streaming: ::grpc::method::GrpcStreaming::Unary,
+                        req_marshaller: Box::new(::grpc::grpc_protobuf::MarshallerProtobuf),
+                        resp_marshaller: Box::new(::grpc::grpc_protobuf::MarshallerProtobuf),
+                    }),
+                    {
+                        let handler_copy = handler_arc.clone();
+                        ::grpc::server::MethodHandlerUnary::new(move |p| handler_copy.set(p))
                     },
                 ),
             ],
