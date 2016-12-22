@@ -1,13 +1,13 @@
 extern crate counterdb;
 extern crate grpc;
 
-use counterdb::client_protocol::ReadRequest;
-use counterdb::client_protocol::ReadResponse;
-use counterdb::client_protocol::SetRequest;
-use counterdb::client_protocol::SetResponse;
+use counterdb::protocol::client::ReadRequest;
+use counterdb::protocol::client::ReadResponse;
+use counterdb::protocol::client::SetRequest;
+use counterdb::protocol::client::SetResponse;
 
-use counterdb::client_protocol_grpc::PartServerClient;
-use counterdb::client_protocol_grpc::PartServer;
+use counterdb::protocol::client_grpc::PartServerClient;
+use counterdb::protocol::client_grpc::PartServer;
 
 fn main() {
     let client: PartServerClient = PartServerClient::new("localhost", 50001, false).unwrap();

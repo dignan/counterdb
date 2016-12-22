@@ -17,8 +17,7 @@ use byteorder::ByteOrder;
 
 static I64_BYTES: usize = 8;
 
-pub mod client_protocol_grpc;
-pub mod client_protocol;
+pub mod protocol;
 
 /**
  * A merge operator that increments the input key

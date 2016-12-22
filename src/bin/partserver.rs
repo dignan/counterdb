@@ -9,14 +9,14 @@ use rocksdb::Options;
 
 use grpc::result::GrpcResult;
 
-use counterdb::client_protocol_grpc::PartServer;
-use counterdb::client_protocol_grpc::PartServerServer;
+use counterdb::protocol::client_grpc::PartServer;
+use counterdb::protocol::client_grpc::PartServerServer;
 
-use counterdb::client_protocol::ReadRequest;
-use counterdb::client_protocol::ReadResponse;
+use counterdb::protocol::client::ReadRequest;
+use counterdb::protocol::client::ReadResponse;
 
-use counterdb::client_protocol::SetRequest;
-use counterdb::client_protocol::SetResponse;
+use counterdb::protocol::client::SetRequest;
+use counterdb::protocol::client::SetResponse;
 
 use counterdb::read;
 use counterdb::set;

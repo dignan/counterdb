@@ -21,15 +21,15 @@
 // interface
 
 pub trait PartServer {
-    fn read(&self, p: super::client_protocol::ReadRequest) -> ::grpc::result::GrpcResult<super::client_protocol::ReadResponse>;
+    fn read(&self, p: super::client::ReadRequest) -> ::grpc::result::GrpcResult<super::client::ReadResponse>;
 
-    fn set(&self, p: super::client_protocol::SetRequest) -> ::grpc::result::GrpcResult<super::client_protocol::SetResponse>;
+    fn set(&self, p: super::client::SetRequest) -> ::grpc::result::GrpcResult<super::client::SetResponse>;
 }
 
 pub trait PartServerAsync {
-    fn read(&self, p: super::client_protocol::ReadRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::client_protocol::ReadResponse>;
+    fn read(&self, p: super::client::ReadRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::client::ReadResponse>;
 
-    fn set(&self, p: super::client_protocol::SetRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::client_protocol::SetResponse>;
+    fn set(&self, p: super::client::SetRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::client::SetResponse>;
 }
 
 // sync client
@@ -49,11 +49,11 @@ impl PartServerClient {
 }
 
 impl PartServer for PartServerClient {
-    fn read(&self, p: super::client_protocol::ReadRequest) -> ::grpc::result::GrpcResult<super::client_protocol::ReadResponse> {
+    fn read(&self, p: super::client::ReadRequest) -> ::grpc::result::GrpcResult<super::client::ReadResponse> {
         ::futures::Future::wait(self.async_client.read(p))
     }
 
-    fn set(&self, p: super::client_protocol::SetRequest) -> ::grpc::result::GrpcResult<super::client_protocol::SetResponse> {
+    fn set(&self, p: super::client::SetRequest) -> ::grpc::result::GrpcResult<super::client::SetResponse> {
         ::futures::Future::wait(self.async_client.set(p))
     }
 }
@@ -62,8 +62,8 @@ impl PartServer for PartServerClient {
 
 pub struct PartServerAsyncClient {
     grpc_client: ::grpc::client::GrpcClient,
-    method_read: ::std::sync::Arc<::grpc::method::MethodDescriptor<super::client_protocol::ReadRequest, super::client_protocol::ReadResponse>>,
-    method_set: ::std::sync::Arc<::grpc::method::MethodDescriptor<super::client_protocol::SetRequest, super::client_protocol::SetResponse>>,
+    method_read: ::std::sync::Arc<::grpc::method::MethodDescriptor<super::client::ReadRequest, super::client::ReadResponse>>,
+    method_set: ::std::sync::Arc<::grpc::method::MethodDescriptor<super::client::SetRequest, super::client::SetResponse>>,
 }
 
 impl PartServerAsyncClient {
@@ -89,11 +89,11 @@ impl PartServerAsyncClient {
 }
 
 impl PartServerAsync for PartServerAsyncClient {
-    fn read(&self, p: super::client_protocol::ReadRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::client_protocol::ReadResponse> {
+    fn read(&self, p: super::client::ReadRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::client::ReadResponse> {
         self.grpc_client.call_unary(p, self.method_read.clone())
     }
 
-    fn set(&self, p: super::client_protocol::SetRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::client_protocol::SetResponse> {
+    fn set(&self, p: super::client::SetRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::client::SetResponse> {
         self.grpc_client.call_unary(p, self.method_set.clone())
     }
 }
@@ -110,14 +110,14 @@ struct PartServerServerHandlerToAsync {
 }
 
 impl PartServerAsync for PartServerServerHandlerToAsync {
-    fn read(&self, p: super::client_protocol::ReadRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::client_protocol::ReadResponse> {
+    fn read(&self, p: super::client::ReadRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::client::ReadResponse> {
         let h = self.handler.clone();
         ::grpc::rt::sync_to_async_unary(&self.cpupool, p, move |p| {
             h.read(p)
         })
     }
 
-    fn set(&self, p: super::client_protocol::SetRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::client_protocol::SetResponse> {
+    fn set(&self, p: super::client::SetRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::client::SetResponse> {
         let h = self.handler.clone();
         ::grpc::rt::sync_to_async_unary(&self.cpupool, p, move |p| {
             h.set(p)
