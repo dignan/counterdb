@@ -1,89 +1,74 @@
 extern crate counterdb;
-extern crate grpc;
-extern crate rocksdb;
+
 #[macro_use] extern crate log;
 extern crate log4rs;
 
+extern crate clap;
+
 use std::thread;
 
-use rocksdb::DB;
+use log::LogLevelFilter;
 
-use grpc::result::GrpcResult;
+use log4rs::append::file::FileAppender;
 
-use log4rs::file::Deserializers;
+use log4rs::config::Appender;
+use log4rs::config::Config;
+use log4rs::config::Logger;
+use log4rs::config::Root;
 
-use counterdb::protocol::client_grpc::PartServer;
+use clap::Arg;
+use clap::App;
+use clap::SubCommand;
+
+use counterdb::configuration::server_config::PartServerConfig;
+use counterdb::configuration::server_config::read_part_server_config;
+
 use counterdb::protocol::client_grpc::PartServerServer;
 
-use counterdb::protocol::client::ReadRequest;
-use counterdb::protocol::client::ReadResponse;
+use counterdb::server::partserverrpc::PartServerImpl;
 
-use counterdb::protocol::client::SetRequest;
-use counterdb::protocol::client::SetResponse;
-
-use counterdb::server::partition::read;
-use counterdb::server::partition::set;
-use counterdb::server::partition::get_db_options;
-
-struct PartServerImpl {
-    db: DB
-}
-
-impl PartServer for PartServerImpl {
-    fn read (&self, req: ReadRequest) -> GrpcResult<ReadResponse> {
-        match read(&(self.db), req.get_key()) {
-            Ok(maybe_val) => {
-                match maybe_val {
-                    Some(val) => {
-                        let mut response = ReadResponse::new();
-                        response.set_value(val);
-                        response.set_is_value(true);
-                        Ok(response)
-                    },
-                    None => Ok(ReadResponse::new())
-                }
-            },
-            Err(e) => panic!("we should probably handle this better ;) {}", e)
-        }
-    }
-
-    fn set(&self, req: SetRequest) -> GrpcResult<SetResponse> {
-        let mut response = SetResponse::new();
-
-        match set(&(self.db), req.get_key(), req.get_value()) {
-            Ok(()) => {
-                Ok(response)
-            },
-            Err(e) => {
-                response.set_is_error(true);
-                response.set_error_message(String::from("surely i'll come back to this"));
-                error!("Error on set request: {:?} error: {}", req, e);
-                Ok(response)
-            }
-        }
-    }
-}
-
-impl PartServerImpl {
-    pub fn new() -> PartServerImpl {
-        PartServerImpl {
-            db: match DB::open(&get_db_options(), "test-rdb") {
-                Ok(db) => db,
-                Err(e) => panic!("Freak out we don't know how to database!!!! error {}", e)
-            }
-        }
-    }
+fn create_parser<'a, 'b>() -> App<'a, 'b> {
+    App::new("partserver")
+        .version("0.0.1")
+        .about("Host partitions for counterdb")
+        .arg(Arg::with_name("config")
+            .short("c")
+            .long("config")
+            .value_name("CONFIG")
+            .help("where the partserver will read its config from.  Defaults will be used if this is unspecified")
+            .takes_value(true))
 }
 
 fn main() {
-    log4rs::init_file("partserver.log", Deserializers::default()).unwrap();
-    info!("Starting partserver");
+    let cli_parser = create_parser();
+
+    let matches = cli_parser.get_matches();
+
+    let partserver_config: PartServerConfig<String> = match matches.value_of("config") {
+        Some(config_filename) => {
+            match read_part_server_config::<&str, String>(config_filename) {
+                Ok(config) => config,
+                Err(e) => panic!("Could not read config {}", e)
+            }
+        },
+        None => PartServerConfig::default()
+    };
+
+    let file_appender = FileAppender::builder()
+        .build(format!("{}/{}", partserver_config.log_dir, "partserver.log")).unwrap();
+
+    let log_config = log4rs::config::Config::builder()
+        .appender(Appender::builder().build("file", Box::new(file_appender)))
+        .build(Root::builder().appender("file").build(LogLevelFilter::Info)).unwrap();
+
+    log4rs::init_config(log_config).unwrap();
+    info!("Starting partserver on port {}", partserver_config.port);
 
     let server_impl = PartServerImpl::new();
 
-    PartServerServer::new(50001, server_impl);
+    PartServerServer::new(partserver_config.port, server_impl);
 
-    info!("Part server started");
+    info!("Partserver started");
 
     loop {
         thread::park();
