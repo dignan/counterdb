@@ -15,7 +15,7 @@ pub struct PartServerConfig<P: AsRef<Path>> {
     pub log_dir: P,
     pub hostname: String,
     pub port: u16,
-    pub zk_connect_string: String
+    pub zk_connect_string: String,
 }
 
 pub struct CoordinatorConfig<P: AsRef<Path>> {
@@ -23,7 +23,7 @@ pub struct CoordinatorConfig<P: AsRef<Path>> {
     pub log_dir: P,
     pub hostname: String,
     pub port: u16,
-    pub zk_connect_string: String
+    pub zk_connect_string: String,
 }
 
 impl Default for PartServerConfig<String> {
@@ -36,7 +36,7 @@ impl Default for PartServerConfig<String> {
             log_dir: String::from("/srv/partserver/logs/"),
             hostname: String::from("localhost"),
             port: 50001,
-            zk_connect_string: String::from("localhost:2181")
+            zk_connect_string: String::from("localhost:2181"),
         }
     }
 }
@@ -48,13 +48,14 @@ impl Default for CoordinatorConfig<String> {
             log_dir: String::from("/srv/coordinator/logs/"),
             hostname: String::from("localhost"),
             port: 60001,
-            zk_connect_string: String::from("localhost")
+            zk_connect_string: String::from("localhost"),
         }
     }
 }
 
 pub fn read_part_server_config<P, T>(path: P) -> Result<PartServerConfig<String>, Error>
-    where P: AsRef<Path> + Debug {
+    where P: AsRef<Path> + Debug
+{
     let mut config = PartServerConfig::default();
 
     match get_toml_table(&path)? {
@@ -63,31 +64,44 @@ pub fn read_part_server_config<P, T>(path: P) -> Result<PartServerConfig<String>
                 match key.as_str() {
                     "data_dirs" => {
                         match value.as_str() {
-                            Some(val) => config.data_dirs = val.split(",").map(|s| s.to_string()).collect(),
-                            None => warn!("Couldn't parse {} as a string", value)
+                            Some(val) => {
+                                config.data_dirs = val.split(",").map(|s| s.to_string()).collect()
+                            }
+                            None => warn!("Couldn't parse {} as a string", value),
                         }
-                    },
-                    "log_dir" => match value.as_str() {
-                        Some(val) => config.log_dir = String::from(val),
-                        None => warn!("Couldn't parse logdir value {} as a string", value)
-                    },
-                    "hostname" => match value.as_str() {
-                        Some(val) => config.hostname = String::from(val),
-                        None => warn!("Couldn't parse hostname value {} as a string", value)
-                    },
-                    "port" => match value.as_integer() {
-                        Some(val) => config.port = val as u16,
-                        None => warn!("Couldn't parse port value {} as an integer", value)
-                    },
-                    "zk_connect_string" => match value.as_str() {
-                        Some(val) => config.zk_connect_string = String::from(val),
-                        None => warn!("Couldn't parse zk_connect_string value {} as an integer", value)
-                    },
-                    &_ => warn!("Unknown pattern {}", key)
+                    }
+                    "log_dir" => {
+                        match value.as_str() {
+                            Some(val) => config.log_dir = String::from(val),
+                            None => warn!("Couldn't parse logdir value {} as a string", value),
+                        }
+                    }
+                    "hostname" => {
+                        match value.as_str() {
+                            Some(val) => config.hostname = String::from(val),
+                            None => warn!("Couldn't parse hostname value {} as a string", value),
+                        }
+                    }
+                    "port" => {
+                        match value.as_integer() {
+                            Some(val) => config.port = val as u16,
+                            None => warn!("Couldn't parse port value {} as an integer", value),
+                        }
+                    }
+                    "zk_connect_string" => {
+                        match value.as_str() {
+                            Some(val) => config.zk_connect_string = String::from(val),
+                            None => {
+                                warn!("Couldn't parse zk_connect_string value {} as an integer",
+                                      value)
+                            }
+                        }
+                    }
+                    &_ => warn!("Unknown pattern {}", key),
                 };
             }
-        },
-        None => panic!("No configuration found in {:?}", path)
+        }
+        None => panic!("No configuration found in {:?}", path),
     }
 
     Ok(config)

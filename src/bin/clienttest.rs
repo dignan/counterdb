@@ -1,6 +1,7 @@
 extern crate counterdb;
 extern crate grpc;
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate log;
 extern crate log4rs;
 
 use log4rs::file::Deserializers;
@@ -28,7 +29,7 @@ fn main() {
     info!("Value found: {:?}", response.get_is_value());
 
     let mut set_request = SetRequest::new();
-    set_request.set_key(test_key2   );
+    set_request.set_key(test_key2);
     set_request.set_value(45);
     let set_response = client.set(set_request).unwrap();
 

@@ -9,14 +9,14 @@ use protocol::coordinator::KeyRangeProto;
 #[derive(Clone)]
 pub struct Table {
     name: String,
-    partitions: Vec<Partition>
+    partitions: Vec<Partition>,
 }
 
 impl Table {
     pub fn with_name(name: String) -> Table {
         Table {
             name: name,
-            partitions: Vec::new()
+            partitions: Vec::new(),
         }
     }
 
@@ -32,24 +32,24 @@ impl Table {
 #[derive(Clone)]
 pub struct KeyRange {
     start_key: Option<Vec<u8>>,
-    end_key: Option<Vec<u8>>
+    end_key: Option<Vec<u8>>,
 }
 
 impl From<KeyRangeProto> for KeyRange {
     fn from(proto: KeyRangeProto) -> KeyRange {
         let skey = match proto.has_start_key() {
             true => Some(proto.get_start_key().to_vec()),
-            false => None
+            false => None,
         };
 
         let ekey = match proto.has_end_key() {
             true => Some(proto.get_end_key().to_vec()),
-            false => None
+            false => None,
         };
 
         KeyRange {
             start_key: skey,
-            end_key: ekey
+            end_key: ekey,
         }
     }
 }
@@ -58,7 +58,7 @@ impl From<KeyRangeProto> for KeyRange {
 pub struct Partition {
     id: Uuid,
     location: PartitionLocation,
-    key_range: KeyRange
+    key_range: KeyRange,
 }
 
 impl Partition {
@@ -68,7 +68,7 @@ impl Partition {
         Ok(Partition {
             id: id,
             location: PartitionLocation::from_proto(proto.take_partition_location()),
-            key_range: KeyRange::from(proto.take_key_range())
+            key_range: KeyRange::from(proto.take_key_range()),
         })
     }
 }
@@ -76,14 +76,14 @@ impl Partition {
 #[derive(Clone)]
 pub struct PartitionLocation {
     hostname: String,
-    port: u16
+    port: u16,
 }
 
 impl PartitionLocation {
     fn from_proto(mut proto: PartitionLocationProto) -> PartitionLocation {
         PartitionLocation {
             port: proto.get_port() as u16,
-            hostname: proto.take_hostname()
+            hostname: proto.take_hostname(),
         }
     }
 }

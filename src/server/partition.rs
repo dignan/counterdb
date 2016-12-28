@@ -11,10 +11,13 @@ static I64_BYTES: usize = 8;
 /**
  * A merge operator that increments the input key
  */
-fn increment_merge(key: &[u8], existing_val: Option<&[u8]>, operands: &mut MergeOperands) -> Vec<u8> {
+fn increment_merge(key: &[u8],
+                   existing_val: Option<&[u8]>,
+                   operands: &mut MergeOperands)
+                   -> Vec<u8> {
     let starting_val = match existing_val {
         Some(val) => BigEndian::read_i64(val),
-        None => 0
+        None => 0,
     };
 
     let mut operand_counter = 0;
@@ -26,7 +29,8 @@ fn increment_merge(key: &[u8], existing_val: Option<&[u8]>, operands: &mut Merge
     }
 
     if operand_counter == 0 {
-        panic!("Did not receive a merge operand in increment_merge!  How did we get here?  Time to panic");
+        panic!("Did not receive a merge operand in increment_merge!  How did we get here?  Time \
+                to panic");
     }
 
     buf
@@ -40,13 +44,13 @@ pub fn increment(db: &DB, key: &[u8], add: i64) -> Result<(), Error> {
 
 pub fn read(db: &DB, key: &[u8]) -> Result<Option<i64>, Error> {
     match db.get(key) {
-        Ok(db_vec_maybe) => match db_vec_maybe {
-            Some(vec) => {
-                Ok(Some(BigEndian::read_i64(&vec)))
-            },
-            None => Ok(None)
-        },
-        Err(e) => Err(e)
+        Ok(db_vec_maybe) => {
+            match db_vec_maybe {
+                Some(vec) => Ok(Some(BigEndian::read_i64(&vec))),
+                None => Ok(None),
+            }
+        }
+        Err(e) => Err(e),
     }
 }
 

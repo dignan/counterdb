@@ -22,12 +22,12 @@ pub struct Coordinator {
     run_id: Uuid,
     status: CoordinatorStatus,
     zk: ZooKeeper,
-    lock_path: Option<String>
+    lock_path: Option<String>,
 }
 
 pub enum CoordinatorStatus {
     ACTIVE,
-    INACTIVE
+    INACTIVE,
 }
 
 static COORDINATOR_REGISTRATION_PATH: &'static str = "/counterdb/coordinators/{}";
@@ -35,7 +35,9 @@ static COORDINATOR_LOCK_PATH: &'static str = "/counterdb/coordinator_lock/_lockn
 
 impl Coordinator {
     pub fn new(hostname: String, zk_connect_string: String) -> Result<Coordinator, ZkError> {
-        let zk: ZooKeeper = ZooKeeper::connect(&zk_connect_string, Duration::from_millis(15_000), CoordinatorWatcher)?;
+        let zk: ZooKeeper = ZooKeeper::connect(&zk_connect_string,
+                                               Duration::from_millis(15_000),
+                                               CoordinatorWatcher)?;
 
         Ok(Coordinator {
             hostname: hostname,
@@ -43,7 +45,7 @@ impl Coordinator {
             run_id: Uuid::new_v4(),
             status: CoordinatorStatus::INACTIVE,
             zk: zk,
-            lock_path: None
+            lock_path: None,
         })
     }
 
@@ -51,11 +53,18 @@ impl Coordinator {
         let mut registration_path = String::from(COORDINATOR_REGISTRATION_PATH);
         registration_path.push_str(&self.get_unique_hoststring());
 
-        self.zk.create(&registration_path, Vec::new(), acls::OPEN_ACL_UNSAFE.clone(), CreateMode::Ephemeral)
+        self.zk.create(&registration_path,
+                       Vec::new(),
+                       acls::OPEN_ACL_UNSAFE.clone(),
+                       CreateMode::Ephemeral)
     }
 
     pub fn take_lock(&mut self) -> Result<(), ZkError> {
-        let lock_path: String = self.zk.create(COORDINATOR_LOCK_PATH, Vec::new(), acls::OPEN_ACL_UNSAFE.clone(), CreateMode::EphemeralSequential)?;
+        let lock_path: String = self.zk
+            .create(COORDINATOR_LOCK_PATH,
+                    Vec::new(),
+                    acls::OPEN_ACL_UNSAFE.clone(),
+                    CreateMode::EphemeralSequential)?;
 
         loop {
             let children: Vec<String> = self.zk.get_children(COORDINATOR_LOCK_PATH, false)?;
@@ -71,25 +80,28 @@ impl Coordinator {
 
                 if child_seq_id < this_seqid {
                     is_lowest = false;
-                } else if next_lowest.is_none() || next_lowest.is_some() && next_lowest.unwrap() > child_seq_id {
+                } else if next_lowest.is_none() ||
+                          next_lowest.is_some() && next_lowest.unwrap() > child_seq_id {
                     next_lowest = Some(child_seq_id);
                     next_lowest_path = Some(child);
                 }
             }
 
-            if is_lowest { // We have the lock
+            if is_lowest {
+                // We have the lock
                 info!("We have obtained the lock");
                 self.status = CoordinatorStatus::ACTIVE;
                 break;
-            } else { // We do not have the lock - watch the others
+            } else {
+                // We do not have the lock - watch the others
                 match next_lowest_path {
                     Some(path) => {
                         match self.zk.exists(&path, true)? {
                             Some(stat) => info!("{} exists held by {}", path, stat.ephemeral_owner),
-                            None => info!("{} does not exist!  Attempting to gain lock!", path)
+                            None => info!("{} does not exist!  Attempting to gain lock!", path),
                         };
-                    },
-                    None => warn!("No other children of the lock found, not watching for them")
+                    }
+                    None => warn!("No other children of the lock found, not watching for them"),
                 }
             }
         }
@@ -101,15 +113,13 @@ impl Coordinator {
         match self.lock_path {
             Some(ref path) => {
                 match self.zk.exists(&path, false)? {
-                    Some(stat) => {
-                        self.zk.delete(&path, stat.version)
-                    },
+                    Some(stat) => self.zk.delete(&path, stat.version),
                     None => {
                         println!("No lock held");
                         Ok(())
                     }
                 }
-            },
+            }
             None => {
                 warn!("Released lock with no lock held");
                 Ok(())
@@ -117,9 +127,7 @@ impl Coordinator {
         }
     }
 
-    pub fn create_table(&self, table: Table) {
-
-    }
+    pub fn create_table(&self, table: Table) {}
 
     fn get_unique_hoststring(&self) -> String {
         format!("{}/{}", self.hostname, self.run_id)
@@ -143,13 +151,15 @@ fn get_sequence_number_from_path(lock_path: &String) -> i32 {
     match caps_maybe {
         Some(caps) => {
             match caps.name("sequence_number") {
-                Some(seq_num) => match i32::from_str_radix(seq_num, 10) {
-                    Ok(val) => val,
-                    Err(e) => panic!("Non-integer sequence number {}", e)
-                },
+                Some(seq_num) => {
+                    match i32::from_str_radix(seq_num, 10) {
+                        Ok(val) => val,
+                        Err(e) => panic!("Non-integer sequence number {}", e),
+                    }
+                }
                 None => panic!("No match for sequence number"),
             }
-        },
+        }
         None => {
             panic!("No captures found!");
         }

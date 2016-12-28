@@ -1,6 +1,7 @@
 extern crate counterdb;
 
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate log;
 extern crate log4rs;
 
 extern crate clap;
@@ -32,7 +33,8 @@ fn create_parser<'a, 'b>() -> App<'a, 'b> {
             .short("c")
             .long("config")
             .value_name("CONFIG")
-            .help("where the partserver will read its config from.  Defaults will be used if this is unspecified")
+            .help("where the partserver will read its config from.  Defaults will be used if \
+                   this is unspecified")
             .takes_value(true))
 }
 
@@ -45,18 +47,20 @@ fn main() {
         Some(config_filename) => {
             match read_part_server_config::<&str, String>(config_filename) {
                 Ok(config) => config,
-                Err(e) => panic!("Could not read config {}", e)
+                Err(e) => panic!("Could not read config {}", e),
             }
-        },
-        None => PartServerConfig::default()
+        }
+        None => PartServerConfig::default(),
     };
 
     let file_appender = FileAppender::builder()
-        .build(format!("{}/{}", partserver_config.log_dir, "partserver.log")).unwrap();
+        .build(format!("{}/{}", partserver_config.log_dir, "partserver.log"))
+        .unwrap();
 
     let log_config = log4rs::config::Config::builder()
         .appender(Appender::builder().build("file", Box::new(file_appender)))
-        .build(Root::builder().appender("file").build(LogLevelFilter::Info)).unwrap();
+        .build(Root::builder().appender("file").build(LogLevelFilter::Info))
+        .unwrap();
 
     log4rs::init_config(log_config).unwrap();
     info!("Starting partserver on port {}", partserver_config.port);

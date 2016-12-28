@@ -5,7 +5,8 @@ extern crate regex;
 extern crate uuid;
 extern crate toml;
 
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate log;
 
 // necessary for grpc
 extern crate protobuf;
