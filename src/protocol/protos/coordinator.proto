@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+service Coordinator {
+    rpc create_table (CreateTableRequest) returns (CreateTableResponse) {}
+    rpc delete_table (CreateTableRequest) returns (CreateTableResponse) {}
+}
+
+message CreateTableRequest {
+    TableProto table = 1;
+}
+
+message CreateTableResponse {
+    bool success = 1;
+}
+
+message TableProto {
+    string name = 1;
+    repeated PartitionProto partitions = 2;
+}
+
+message PartitionProto {
+    bytes id = 1;
+    KeyRangeProto key_range = 2;
+    PartitionLocationProto partition_location = 3;
+}
+
+message KeyRangeProto {
+    bytes start_key = 1;
+    bytes end_key = 2;
+}
+
+message PartitionLocationProto {
+    string hostname = 1;
+    uint32 port = 2;
+}

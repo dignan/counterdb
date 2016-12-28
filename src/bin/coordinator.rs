@@ -25,14 +25,14 @@ use counterdb::protocol::client_grpc::PartServerServer;
 use counterdb::server::partserverrpc::PartServerImpl;
 
 fn create_parser<'a, 'b>() -> App<'a, 'b> {
-    App::new("partserver")
+    App::new("coordinator")
         .version("0.0.1")
-        .about("Host partitions for counterdb")
+        .about("Perform coordination tasks for counterdb")
         .arg(Arg::with_name("config")
             .short("c")
             .long("config")
             .value_name("CONFIG")
-            .help("where the partserver will read its config from.  Defaults will be used if this is unspecified")
+            .help("where the coordinator will read its config from.  Defaults will be used if this is unspecified")
             .takes_value(true))
 }
 
@@ -59,13 +59,13 @@ fn main() {
         .build(Root::builder().appender("file").build(LogLevelFilter::Info)).unwrap();
 
     log4rs::init_config(log_config).unwrap();
-    info!("Starting partserver on port {}", partserver_config.port);
+    info!("Starting coordinator on port {}", partserver_config.port);
 
     let server_impl = PartServerImpl::new();
 
     PartServerServer::new(partserver_config.port, server_impl);
 
-    info!("Partserver started");
+    info!("Coordinator started");
 
     loop {
         thread::park();

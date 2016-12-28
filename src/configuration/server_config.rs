@@ -18,6 +18,14 @@ pub struct PartServerConfig<P: AsRef<Path>> {
     pub zk_connect_string: String
 }
 
+pub struct CoordinatorConfig<P: AsRef<Path>> {
+    pub meta_dir: P,
+    pub log_dir: P,
+    pub hostname: String,
+    pub port: u16,
+    pub zk_connect_string: String
+}
+
 impl Default for PartServerConfig<String> {
     fn default() -> Self {
         let mut data_dirs_default = Vec::new();
@@ -29,6 +37,18 @@ impl Default for PartServerConfig<String> {
             hostname: String::from("localhost"),
             port: 50001,
             zk_connect_string: String::from("localhost:2181")
+        }
+    }
+}
+
+impl Default for CoordinatorConfig<String> {
+    fn default() -> Self {
+        CoordinatorConfig {
+            meta_dir: String::from("/srv/coordinator/data/"),
+            log_dir: String::from("/srv/coordinator/logs/"),
+            hostname: String::from("localhost"),
+            port: 60001,
+            zk_connect_string: String::from("localhost")
         }
     }
 }

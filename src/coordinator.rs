@@ -14,6 +14,8 @@ use regex::Captures;
 
 use uuid::Uuid;
 
+use server::table::Table;
+
 pub struct Coordinator {
     hostname: String,
     start_time: Instant,
@@ -113,6 +115,10 @@ impl Coordinator {
                 Ok(())
             }
         }
+    }
+
+    pub fn create_table(&self, table: Table) {
+
     }
 
     fn get_unique_hoststring(&self) -> String {
