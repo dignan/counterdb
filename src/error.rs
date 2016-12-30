@@ -21,6 +21,7 @@ pub enum CounterDbError {
     RocksDb(RocksDbError),
     UuidParse(UuidParseError),
     Protobuf(ProtobufError),
+    TableExists(String),
 }
 
 impl From<ParseError> for CounterDbError {
@@ -61,6 +62,7 @@ impl Error for CounterDbError {
             CounterDbError::RocksDb(ref e) => e.description(),
             CounterDbError::UuidParse(ref e) => e.description(),
             CounterDbError::Protobuf(ref e) => e.description(),
+            CounterDbError::TableExists(_) => "Table already exists",
         }
     }
 
@@ -71,6 +73,7 @@ impl Error for CounterDbError {
             CounterDbError::RocksDb(ref e) => e.cause(),
             CounterDbError::UuidParse(ref e) => e.cause(),
             CounterDbError::Protobuf(ref e) => e.cause(),
+            CounterDbError::TableExists(_) => None,
         }
     }
 }
@@ -83,6 +86,7 @@ impl fmt::Display for CounterDbError {
             CounterDbError::RocksDb(ref e) => e.fmt(formatter),
             CounterDbError::UuidParse(ref e) => e.fmt(formatter),
             CounterDbError::Protobuf(ref e) => e.fmt(formatter),
+            CounterDbError::TableExists(ref table) => write!(formatter, "TableExists: {}", table),
         }
     }
 }

@@ -127,7 +127,9 @@ impl Coordinator {
         }
     }
 
-    pub fn create_table(&self, table: Table) {}
+    pub fn create_table(&self, table: Table) {
+        unimplemented!()
+    }
 
     fn get_unique_hoststring(&self) -> String {
         format!("{}/{}", self.hostname, self.run_id)

@@ -5,15 +5,19 @@ use rocksdb::DBIterator;
 use rocksdb::Direction;
 use rocksdb::Options;
 use rocksdb::IteratorMode;
+use rocksdb::WriteBatch;
 
 use protobuf;
+use protobuf::Message;
 
 use super::table::Table;
 use super::table::Partition;
 
 use protocol::coordinator::PartitionProto;
+use protocol::coordinator::KeyRangeProto;
 
 use error::CounterDbResult;
+use error::CounterDbError;
 
 pub struct TableManager {
     db: DB,
@@ -26,8 +30,12 @@ impl TableManager {
         Ok(TableManager { db: db })
     }
 
-    pub fn create_table(&self, table: Table, num_splits: i8) -> CounterDbResult<Table> {
-        unimplemented!();
+    pub fn create_table(&self, table: Table, num_splits: i8) -> CounterDbResult<()> {
+        match self.get_table(table.name().clone()) {
+            Ok(Some(table)) => Err(CounterDbError::TableExists(table.name().clone())),
+            Ok(None) => self.create_table_internal(table),
+            Err(e) => Err(e),
+        }
     }
 
     pub fn get_table(&self, table_name: String) -> CounterDbResult<Option<Table>> {
@@ -57,11 +65,23 @@ impl TableManager {
         self.get_tables_internal(None, false)
     }
 
+    fn create_table_internal(&self, table: Table) -> CounterDbResult<()> {
+        let mut batch = WriteBatch::default();
+
+        for partition in table.partitions().into_iter() {
+            let key = get_key_for_table_and_partition(table.name().clone(), partition);
+            let value = get_value_for_partition(partition)?;
+            batch.put(&key, &value)?;
+        }
+
+        Ok(self.db.write(batch)?)
+    }
+
     fn get_tables_internal(&self,
                            start_key: Option<&[u8]>,
                            find_single_table: bool)
                            -> CounterDbResult<Vec<Table>> {
-        let mut iterator: DBIterator = match start_key {
+        let iterator: DBIterator = match start_key {
             Some(skey) => self.db.iterator(IteratorMode::From(skey, Direction::Forward)),
             None => self.db.iterator(IteratorMode::Start),
         };
@@ -75,7 +95,7 @@ impl TableManager {
                 Some(ref table) => {
                     let table_name = String::from_utf8(Vec::from(&key[0..key.len() - 16]))?;
 
-                    if table_name != table.get_name() {
+                    if table_name != *table.name() {
                         tables.push(table.clone());
 
                         let mut new_table = Table::with_name(table_name);
@@ -121,4 +141,20 @@ fn get_db_opts() -> Options {
     let mut opts = Options::default();
     opts.create_if_missing(true);
     opts
+}
+
+fn get_key_for_table_and_partition(table_name: String, partition: &Partition) -> Vec<u8> {
+    let name_bytes = table_name.as_bytes();
+    let mut key = Vec::new();
+
+    key.extend_from_slice(name_bytes);
+    key.extend_from_slice(partition.id().clone().as_bytes());
+
+    key
+}
+
+fn get_value_for_partition(partition: &Partition) -> CounterDbResult<Vec<u8>> {
+    let mut value = Vec::new();
+    PartitionProto::from(partition).write_to_vec(&mut value)?;
+    Ok(value)
 }
