@@ -5,6 +5,7 @@ extern crate log;
 extern crate log4rs;
 
 extern crate clap;
+extern crate zookeeper;
 
 use std::thread;
 
@@ -36,6 +37,10 @@ fn create_parser<'a, 'b>() -> App<'a, 'b> {
             .help("where the partserver will read its config from.  Defaults will be used if \
                    this is unspecified")
             .takes_value(true))
+        .arg(Arg::with_name("zk")
+            .long("zk-connect-string")
+            .help("Zookeeper connect string: e.g. host1:2181,host2:2181/counterdb")
+            .takes_value(true))
 }
 
 fn main() {
@@ -65,9 +70,10 @@ fn main() {
     log4rs::init_config(log_config).unwrap();
     info!("Starting partserver on port {}", partserver_config.port);
 
-    let server_impl = PartServerImpl::new();
+    let port = partserver_config.port;
+    let server_impl = PartServerImpl::new(partserver_config).unwrap();
 
-    PartServerServer::new(partserver_config.port, server_impl);
+    PartServerServer::new(port, server_impl);
 
     info!("Partserver started");
 

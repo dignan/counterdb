@@ -38,40 +38,4 @@ fn create_parser<'a, 'b>() -> App<'a, 'b> {
             .takes_value(true))
 }
 
-fn main() {
-    let cli_parser = create_parser();
-
-    let matches = cli_parser.get_matches();
-
-    let partserver_config: PartServerConfig<String> = match matches.value_of("config") {
-        Some(config_filename) => {
-            match read_part_server_config::<&str, String>(config_filename) {
-                Ok(config) => config,
-                Err(e) => panic!("Could not read config {}", e),
-            }
-        }
-        None => PartServerConfig::default(),
-    };
-
-    let file_appender = FileAppender::builder()
-        .build(format!("{}/{}", partserver_config.log_dir, "partserver.log"))
-        .unwrap();
-
-    let log_config = log4rs::config::Config::builder()
-        .appender(Appender::builder().build("file", Box::new(file_appender)))
-        .build(Root::builder().appender("file").build(LogLevelFilter::Info))
-        .unwrap();
-
-    log4rs::init_config(log_config).unwrap();
-    info!("Starting coordinator on port {}", partserver_config.port);
-
-    let server_impl = PartServerImpl::new();
-
-    PartServerServer::new(partserver_config.port, server_impl);
-
-    info!("Coordinator started");
-
-    loop {
-        thread::park();
-    }
-}
+fn main() {}

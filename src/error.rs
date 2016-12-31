@@ -12,6 +12,8 @@ use uuid::ParseError as UuidParseError;
 
 use protobuf::ProtobufError;
 
+use zookeeper::ZkError;
+
 pub type CounterDbResult<T> = Result<T, CounterDbError>;
 
 #[derive(Debug)]
@@ -22,6 +24,7 @@ pub enum CounterDbError {
     UuidParse(UuidParseError),
     Protobuf(ProtobufError),
     TableExists(String),
+    Zk(ZkError),
 }
 
 impl From<ParseError> for CounterDbError {
@@ -54,6 +57,11 @@ impl From<ProtobufError> for CounterDbError {
     }
 }
 
+impl From<ZkError> for CounterDbError {
+    fn from(e: ZkError) -> CounterDbError {
+        CounterDbError::Zk(e)
+    }
+}
 impl Error for CounterDbError {
     fn description(&self) -> &str {
         match *self {
@@ -63,6 +71,7 @@ impl Error for CounterDbError {
             CounterDbError::UuidParse(ref e) => e.description(),
             CounterDbError::Protobuf(ref e) => e.description(),
             CounterDbError::TableExists(_) => "Table already exists",
+            CounterDbError::Zk(ref e) => e.description(),
         }
     }
 
@@ -74,6 +83,7 @@ impl Error for CounterDbError {
             CounterDbError::UuidParse(ref e) => e.cause(),
             CounterDbError::Protobuf(ref e) => e.cause(),
             CounterDbError::TableExists(_) => None,
+            CounterDbError::Zk(ref e) => e.cause(),
         }
     }
 }
@@ -87,6 +97,7 @@ impl fmt::Display for CounterDbError {
             CounterDbError::UuidParse(ref e) => e.fmt(formatter),
             CounterDbError::Protobuf(ref e) => e.fmt(formatter),
             CounterDbError::TableExists(ref table) => write!(formatter, "TableExists: {}", table),
+            CounterDbError::Zk(ref e) => e.fmt(formatter),
         }
     }
 }

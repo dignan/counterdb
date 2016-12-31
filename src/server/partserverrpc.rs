@@ -1,6 +1,14 @@
+use std::sync::Arc;
+
+use std::time::Duration;
+
 use rocksdb::DB;
 
 use grpc::result::GrpcResult;
+
+use zookeeper::ZooKeeper;
+use zookeeper::Watcher;
+use zookeeper::WatchedEvent;
 
 use protocol::client_grpc::PartServer;
 
@@ -14,8 +22,16 @@ use super::partition::read;
 use super::partition::set;
 use super::partition::get_db_options;
 
+use super::registration::Registrar;
+
+use error::CounterDbResult;
+
+use configuration::server_config::PartServerConfig;
+
 pub struct PartServerImpl {
     db: DB,
+    zk: Arc<ZooKeeper>,
+    registrar: Registrar,
 }
 
 impl PartServer for PartServerImpl {
@@ -53,13 +69,28 @@ impl PartServer for PartServerImpl {
     }
 }
 
+struct PartServerZkWatcher;
+impl Watcher for PartServerZkWatcher {
+    fn handle(&self, event: WatchedEvent) {
+        info!("Got event: {:?}", event)
+    }
+}
+
 impl PartServerImpl {
-    pub fn new() -> PartServerImpl {
-        PartServerImpl {
+    pub fn new(partserver_config: PartServerConfig<String>) -> CounterDbResult<PartServerImpl> {
+        let zk: Arc<ZooKeeper> = Arc::new(ZooKeeper::connect(&partserver_config.zk_connect_string, Duration::from_millis(10_000), PartServerZkWatcher)?);
+
+        Ok(PartServerImpl {
             db: match DB::open(&get_db_options(), "test-rdb") {
                 Ok(db) => db,
                 Err(e) => panic!("Freak out we don't know how to database!!!! error {}", e),
             },
-        }
+            zk: zk.clone(),
+            registrar: Registrar::new(zk.clone(), String::from("/counterdb/partservers/"), partserver_config.hostname),
+        })
+    }
+
+    pub fn register(&self) -> CounterDbResult<()> {
+        self.registrar.register()
     }
 }
