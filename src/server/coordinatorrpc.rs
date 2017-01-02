@@ -61,7 +61,8 @@ impl CoordinatorImpl {
         let run_id = Uuid::new_v4();
         Ok(CoordinatorImpl {
             registrar: Registrar::new(String::from("/counterdb/coordinators/"),
-                                      get_unique_hoststring(coordinator_config.hostname.clone(), run_id.clone())),
+                                      get_unique_hoststring(coordinator_config.hostname.clone(),
+                                                            run_id.clone())),
             run_state: CoordinatorRunState::STOPPED,
             state: CoordinatorState::INACTIVE,
             config: coordinator_config,
