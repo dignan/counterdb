@@ -25,6 +25,8 @@ pub enum CounterDbError {
     Protobuf(ProtobufError),
     TableExists(String),
     Zk(ZkError),
+    AlreadyInitialized,
+    NotInitialized,
 }
 
 impl From<ParseError> for CounterDbError {
@@ -72,6 +74,8 @@ impl Error for CounterDbError {
             CounterDbError::Protobuf(ref e) => e.description(),
             CounterDbError::TableExists(_) => "Table already exists",
             CounterDbError::Zk(ref e) => e.description(),
+            CounterDbError::AlreadyInitialized => "The registrar is already initialized",
+            CounterDbError::NotInitialized => "The registrar is not initialized",
         }
     }
 
@@ -84,6 +88,8 @@ impl Error for CounterDbError {
             CounterDbError::Protobuf(ref e) => e.cause(),
             CounterDbError::TableExists(_) => None,
             CounterDbError::Zk(ref e) => e.cause(),
+            CounterDbError::AlreadyInitialized => None,
+            CounterDbError::NotInitialized => None,
         }
     }
 }
@@ -98,6 +104,10 @@ impl fmt::Display for CounterDbError {
             CounterDbError::Protobuf(ref e) => e.fmt(formatter),
             CounterDbError::TableExists(ref table) => write!(formatter, "TableExists: {}", table),
             CounterDbError::Zk(ref e) => e.fmt(formatter),
+            CounterDbError::AlreadyInitialized => {
+                write!(formatter, "The registrar is already initialized")
+            }
+            CounterDbError::NotInitialized => write!(formatter, "The registrar is not initialized"),
         }
     }
 }

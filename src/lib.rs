@@ -16,6 +16,5 @@ extern crate futures_cpupool;
 
 pub mod error;
 pub mod protocol;
-pub mod coordinator;
 pub mod server;
 pub mod configuration;

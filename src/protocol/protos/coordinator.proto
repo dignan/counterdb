@@ -2,7 +2,7 @@ syntax = "proto3";
 
 service Coordinator {
     rpc create_table (CreateTableRequest) returns (CreateTableResponse) {}
-    rpc delete_table (CreateTableRequest) returns (CreateTableResponse) {}
+    rpc delete_table (DeleteTableRequest) returns (DeleteTableResponse) {}
 }
 
 message CreateTableRequest {
@@ -10,6 +10,14 @@ message CreateTableRequest {
 }
 
 message CreateTableResponse {
+    bool success = 1;
+}
+
+message DeleteTableRequest {
+    TableProto table = 1;
+}
+
+message DeleteTableResponse {
     bool success = 1;
 }
 

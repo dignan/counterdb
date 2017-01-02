@@ -23,13 +23,13 @@
 pub trait Coordinator {
     fn create_table(&self, p: super::coordinator::CreateTableRequest) -> ::grpc::result::GrpcResult<super::coordinator::CreateTableResponse>;
 
-    fn delete_table(&self, p: super::coordinator::CreateTableRequest) -> ::grpc::result::GrpcResult<super::coordinator::CreateTableResponse>;
+    fn delete_table(&self, p: super::coordinator::DeleteTableRequest) -> ::grpc::result::GrpcResult<super::coordinator::DeleteTableResponse>;
 }
 
 pub trait CoordinatorAsync {
     fn create_table(&self, p: super::coordinator::CreateTableRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::coordinator::CreateTableResponse>;
 
-    fn delete_table(&self, p: super::coordinator::CreateTableRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::coordinator::CreateTableResponse>;
+    fn delete_table(&self, p: super::coordinator::DeleteTableRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::coordinator::DeleteTableResponse>;
 }
 
 // sync client
@@ -53,7 +53,7 @@ impl Coordinator for CoordinatorClient {
         ::futures::Future::wait(self.async_client.create_table(p))
     }
 
-    fn delete_table(&self, p: super::coordinator::CreateTableRequest) -> ::grpc::result::GrpcResult<super::coordinator::CreateTableResponse> {
+    fn delete_table(&self, p: super::coordinator::DeleteTableRequest) -> ::grpc::result::GrpcResult<super::coordinator::DeleteTableResponse> {
         ::futures::Future::wait(self.async_client.delete_table(p))
     }
 }
@@ -63,7 +63,7 @@ impl Coordinator for CoordinatorClient {
 pub struct CoordinatorAsyncClient {
     grpc_client: ::grpc::client::GrpcClient,
     method_create_table: ::std::sync::Arc<::grpc::method::MethodDescriptor<super::coordinator::CreateTableRequest, super::coordinator::CreateTableResponse>>,
-    method_delete_table: ::std::sync::Arc<::grpc::method::MethodDescriptor<super::coordinator::CreateTableRequest, super::coordinator::CreateTableResponse>>,
+    method_delete_table: ::std::sync::Arc<::grpc::method::MethodDescriptor<super::coordinator::DeleteTableRequest, super::coordinator::DeleteTableResponse>>,
 }
 
 impl CoordinatorAsyncClient {
@@ -93,7 +93,7 @@ impl CoordinatorAsync for CoordinatorAsyncClient {
         self.grpc_client.call_unary(p, self.method_create_table.clone())
     }
 
-    fn delete_table(&self, p: super::coordinator::CreateTableRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::coordinator::CreateTableResponse> {
+    fn delete_table(&self, p: super::coordinator::DeleteTableRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::coordinator::DeleteTableResponse> {
         self.grpc_client.call_unary(p, self.method_delete_table.clone())
     }
 }
@@ -117,7 +117,7 @@ impl CoordinatorAsync for CoordinatorServerHandlerToAsync {
         })
     }
 
-    fn delete_table(&self, p: super::coordinator::CreateTableRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::coordinator::CreateTableResponse> {
+    fn delete_table(&self, p: super::coordinator::DeleteTableRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::coordinator::DeleteTableResponse> {
         let h = self.handler.clone();
         ::grpc::rt::sync_to_async_unary(&self.cpupool, p, move |p| {
             h.delete_table(p)

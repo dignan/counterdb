@@ -30,8 +30,8 @@ use configuration::server_config::PartServerConfig;
 
 pub struct PartServerImpl {
     db: DB,
-    zk: Arc<ZooKeeper>,
     registrar: Registrar,
+    config: PartServerConfig<String>,
 }
 
 impl PartServer for PartServerImpl {
@@ -78,16 +78,22 @@ impl Watcher for PartServerZkWatcher {
 
 impl PartServerImpl {
     pub fn new(partserver_config: PartServerConfig<String>) -> CounterDbResult<PartServerImpl> {
-        let zk: Arc<ZooKeeper> = Arc::new(ZooKeeper::connect(&partserver_config.zk_connect_string, Duration::from_millis(10_000), PartServerZkWatcher)?);
-
         Ok(PartServerImpl {
             db: match DB::open(&get_db_options(), "test-rdb") {
                 Ok(db) => db,
                 Err(e) => panic!("Freak out we don't know how to database!!!! error {}", e),
             },
-            zk: zk.clone(),
-            registrar: Registrar::new(zk.clone(), String::from("/counterdb/partservers/"), partserver_config.hostname),
+            registrar: Registrar::new(String::from("/counterdb/partservers/"),
+                                      partserver_config.hostname.clone()),
+            config: partserver_config,
         })
+    }
+
+    pub fn start(&mut self) -> CounterDbResult<()> {
+        let zk: Arc<ZooKeeper> = Arc::new(ZooKeeper::connect(&self.config.zk_connect_string,
+                                                             Duration::from_millis(10_000),
+                                                             PartServerZkWatcher)?);
+        self.registrar.start(zk.clone())
     }
 
     pub fn register(&self) -> CounterDbResult<()> {
